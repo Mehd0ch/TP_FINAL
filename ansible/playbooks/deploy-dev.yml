@@ -1,0 +1,20 @@
+---
+- hosts: dev
+  gather_facts: false
+  vars:
+    repo: "https://github.com/Mehd0ch/TP_FINAL.git" 
+    branch: "dev"                                      
+    dest: "/opt/app/TP_FINAL"
+  tasks:
+    - name: Ensure destination folder exists
+      file:
+        path: "{{ dest }}"
+        state: directory
+        mode: "0755"
+
+    - name: Clone or update repo (DEV)
+      git:
+        repo: "{{ repo }}"
+        dest: "{{ dest }}"
+        version: "{{ branch }}"
+        force: yes
