@@ -3,9 +3,17 @@
   gather_facts: false
   vars:
     repo: "https://github.com/Mehd0ch/TP_FINAL.git"
-    branch: "main"            
+    branch: "main"
     dest: "/opt/app/TP_FINAL"
+
   tasks:
+    - name: Install git
+      become: yes
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
     - name: Ensure destination folder exists
       file:
         path: "{{ dest }}"

@@ -1,0 +1,46 @@
+name: CI/CD (simple)
+
+on:
+  push:
+    branches: [ "dev", "main" ]
+
+jobs:
+  deploy-dev:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mini tests (optionnel)
+        run: |
+          files=$(git ls-files '*.py' || true)
+          [ -z "$files" ] || python3 -m py_compile $files
+
+      - name: Install Ansible + sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible sshpass
+
+      - name: Deploy to DEV
+        run: |
+          ansible-playbook -i ansible/inventory/dev.ini ansible/playbooks/deploy-dev.yml -vv
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest  
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mini tests (optionnel)
+        run: |
+          files=$(git ls-files '*.py' || true)
+          [ -z "$files" ] || python3 -m py_compile $files
+
+      - name: Install Ansible + sshpass
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible sshpass
+
+      - name: Deploy to PROD
+        run: |
+          ansible-playbook -i ansible/inventory/prod.ini ansible/playbooks/deploy-prod.yml -vv
