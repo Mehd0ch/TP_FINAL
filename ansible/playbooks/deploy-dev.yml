@@ -5,24 +5,20 @@
     repo: "https://github.com/Mehd0ch/TP_FINAL.git"
     branch: "dev"
     dest: "/opt/app/TP_FINAL"
-
+    build_root: "{{ playbook_dir }}/.build"
   tasks:
-    - name: Install git
-      become: yes
-      apt:
-        name: git
-        state: present
-        update_cache: yes
-
-    - name: Ensure destination folder exists
-      file:
-        path: "{{ dest }}"
-        state: directory
-        mode: "0755"
-
-    - name: Clone or update repo (DEV)
+    - name: Clone repo on runner (local)
+      delegate_to: localhost
       git:
         repo: "{{ repo }}"
-        dest: "{{ dest }}"
+        dest: "{{ build_root }}/{{ inventory_hostname }}"
         version: "{{ branch }}"
         force: yes
+
+    - name: Ensure dest dir exists inside container
+      delegate_to: localhost
+      command: docker exec {{ inventory_hostname }} mkdir -p {{ dest }}
+
+    - name: Copy code into container
+      delegate_to: localhost
+      command: docker cp "{{ build_root }}/{{ inventory_hostname }}/." "{{ inventory_hostname }}:{{ dest }}/"

@@ -1,46 +1,33 @@
-name: CI/CD (simple)
+name: CI/CD (docker-conn)
 
 on:
   push:
     branches: [ "dev", "main" ]
+  workflow_dispatch: {}
 
 jobs:
-  deploy-dev:
-    if: github.ref == 'refs/heads/dev'
-    runs-on: ubuntu-latest
+  deploy:
+    runs-on: self-hosted 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Mini tests (optionnel)
+      - name: Install Ansible + Docker collection
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+          ansible-galaxy collection install community.docker
+
+      - name: Mini check (optionnel)
         run: |
           files=$(git ls-files '*.py' || true)
           [ -z "$files" ] || python3 -m py_compile $files
 
-      - name: Install Ansible + sshpass
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible sshpass
-
-      - name: Deploy to DEV
+      - name: Deploy DEV
+        if: github.ref == 'refs/heads/dev'
         run: |
           ansible-playbook -i ansible/inventory/dev.ini ansible/playbooks/deploy-dev.yml -vv
 
-  deploy-prod:
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest  
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Mini tests (optionnel)
-        run: |
-          files=$(git ls-files '*.py' || true)
-          [ -z "$files" ] || python3 -m py_compile $files
-
-      - name: Install Ansible + sshpass
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible sshpass
-
-      - name: Deploy to PROD
+      - name: Deploy PROD
+        if: github.ref == 'refs/heads/main'
         run: |
           ansible-playbook -i ansible/inventory/prod.ini ansible/playbooks/deploy-prod.yml -vv

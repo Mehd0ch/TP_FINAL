@@ -1,0 +1,28 @@
+---
+- hosts: prod
+  gather_facts: false
+  vars:
+    repo: "https://github.com/Mehd0ch/TP_FINAL.git"
+    branch: "main"
+    dest: "/opt/app/TP_FINAL"
+
+  tasks:
+    - name: Install git
+      become: yes
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
+    - name: Ensure destination folder exists
+      file:
+        path: "{{ dest }}"
+        state: directory
+        mode: "0755"
+
+    - name: Clone or update repo (PROD)
+      git:
+        repo: "{{ repo }}"
+        dest: "{{ dest }}"
+        version: "{{ branch }}"
+        force: yes
